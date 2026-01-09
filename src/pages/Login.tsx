@@ -3,52 +3,26 @@ import { useNavigate } from "react-router-dom";
 import { Building2, Mail, ArrowRight, Shield, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 export default function Login() {
   const [email, setEmail] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"email" | "otp">("email");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSendOTP = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) {
-      toast.error("Please enter your email");
+    if (!email || !password) {
+      toast.error("Please enter email and password");
       return;
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
-      options: {
-        emailRedirectTo: window.location.origin + "/dashboard",
-      },
-    });
-
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("OTP sent to your email");
-      setStep("otp");
-    }
-    setLoading(false);
-  };
-
-  const handleVerifyOTP = async () => {
-    if (otp.length !== 6) {
-      toast.error("Please enter the complete OTP");
-      return;
-    }
-
-    setLoading(true);
-    const { error } = await supabase.auth.verifyOtp({
-      email,
-      token: otp,
-      type: "email",
+      password,
     });
 
     if (error) {
@@ -118,83 +92,54 @@ export default function Login() {
 
           <div className="rounded-2xl border border-border bg-card p-8">
             <div className="mb-6">
-              <h3 className="text-2xl font-bold text-foreground">
-                {step === "email" ? "Sign In" : "Enter OTP"}
-              </h3>
+              <h3 className="text-2xl font-bold text-foreground">Sign In</h3>
               <p className="mt-1 text-sm text-muted-foreground">
-                {step === "email"
-                  ? "Enter your email to receive a one-time password"
-                  : `We've sent a 6-digit code to ${email}`}
+                Enter your credentials to access the control system
               </p>
             </div>
 
-            {step === "email" ? (
-              <form onSubmit={handleSendOTP} className="space-y-4">
-                <div>
-                  <label className="mb-2 block text-sm font-medium text-foreground">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      type="email"
-                      placeholder="owner@raengicore.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="h-12 pl-10"
-                    />
-                  </div>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="mb-2 block text-sm font-medium text-foreground">
+                  Email Address
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="owner@raengicore.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-12 pl-10"
+                  />
                 </div>
-
-                <Button
-                  type="submit"
-                  className="h-12 w-full gap-2"
-                  disabled={loading}
-                >
-                  {loading ? "Sending..." : "Send OTP"}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </form>
-            ) : (
-              <div className="space-y-6">
-                <div className="flex justify-center">
-                  <InputOTP
-                    value={otp}
-                    onChange={setOtp}
-                    maxLength={6}
-                  >
-                    <InputOTPGroup>
-                      <InputOTPSlot index={0} />
-                      <InputOTPSlot index={1} />
-                      <InputOTPSlot index={2} />
-                      <InputOTPSlot index={3} />
-                      <InputOTPSlot index={4} />
-                      <InputOTPSlot index={5} />
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-
-                <Button
-                  onClick={handleVerifyOTP}
-                  className="h-12 w-full gap-2"
-                  disabled={loading || otp.length !== 6}
-                >
-                  {loading ? "Verifying..." : "Verify & Sign In"}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep("email");
-                    setOtp("");
-                  }}
-                  className="w-full text-center text-sm text-muted-foreground hover:text-primary"
-                >
-                  Use different email
-                </button>
               </div>
-            )}
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-foreground">
+                  Password
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-12 pl-10"
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                className="h-12 w-full gap-2"
+                disabled={loading}
+              >
+                {loading ? "Signing in..." : "Sign In"}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </form>
           </div>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
