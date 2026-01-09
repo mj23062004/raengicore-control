@@ -12,7 +12,9 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const [isSignUp, setIsSignUp] = useState(false);
+
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast.error("Please enter email and password");
@@ -20,16 +22,29 @@ export default function Login() {
     }
 
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      toast.error(error.message);
+    
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Account created! You can now sign in.");
+        setIsSignUp(false);
+      }
     } else {
-      toast.success("Login successful!");
-      navigate("/dashboard");
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        toast.error(error.message);
+      } else {
+        toast.success("Login successful!");
+        navigate("/dashboard");
+      }
     }
     setLoading(false);
   };
@@ -98,7 +113,7 @@ export default function Login() {
               </p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleAuth} className="space-y-4">
               <div>
                 <label className="mb-2 block text-sm font-medium text-foreground">
                   Email Address
@@ -136,10 +151,20 @@ export default function Login() {
                 className="h-12 w-full gap-2"
                 disabled={loading}
               >
-                {loading ? "Signing in..." : "Sign In"}
+                {loading ? (isSignUp ? "Creating..." : "Signing in...") : (isSignUp ? "Create Account" : "Sign In")}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </form>
+
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => setIsSignUp(!isSignUp)}
+                className="text-sm text-primary hover:underline"
+              >
+                {isSignUp ? "Already have an account? Sign In" : "Need an account? Create one"}
+              </button>
+            </div>
           </div>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
